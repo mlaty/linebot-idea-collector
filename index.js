@@ -6,6 +6,22 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// 檢查必要的環境變數
+const requiredEnvVars = [
+  'LINE_CHANNEL_ACCESS_TOKEN',
+  'LINE_CHANNEL_SECRET',
+  'GOOGLE_SHEETS_ID',
+  'GOOGLE_CLIENT_EMAIL',
+  'GOOGLE_PRIVATE_KEY'
+];
+
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    console.error(`錯誤: 環境變數 ${envVar} 未設定`);
+    process.exit(1);
+  }
+}
+
 // Line Bot 設定
 const config = {
   channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
@@ -19,16 +35,21 @@ const userMessages = new Map();
 
 // Google Sheets 設定
 const initGoogleSheet = async () => {
-  const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEETS_ID);
-  
-  // 使用服務帳戶進行認證
-  await doc.useServiceAccountAuth({
-    client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-  });
-  
-  await doc.loadInfo();
-  return doc;
+  try {
+    const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEETS_ID);
+    
+    // 使用服務帳戶進行認證
+    await doc.useServiceAccountAuth({
+      client_email: process.env.GOOGLE_CLIENT_EMAIL,
+      private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    });
+    
+    await doc.loadInfo();
+    return doc;
+  } catch (error) {
+    console.error('初始化 Google Sheets 時發生錯誤:', error);
+    throw error;
+  }
 };
 
 // 儲存訊息到 Google Sheets
@@ -132,4 +153,6 @@ app.get('/', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`伺服器在 port ${PORT} 上運行`);
+  console.log('環境變數檢查通過');
+  console.log('Line Bot 準備就緒');
 });
