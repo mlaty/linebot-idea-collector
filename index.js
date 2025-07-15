@@ -38,7 +38,7 @@ const initGoogleSheet = async () => {
   try {
     const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEETS_ID);
     
-    // 使用服務帳戶進行認證
+    // 使用服務帳戶進行認證 (v3 API)
     await doc.useServiceAccountAuth({
       client_email: process.env.GOOGLE_CLIENT_EMAIL,
       private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
