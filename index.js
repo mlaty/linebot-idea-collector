@@ -62,20 +62,27 @@ const saveToGoogleSheet = async (userId, messages) => {
     let sheet = doc.sheetsByIndex[0];
     console.log('取得工作表:', sheet ? sheet.title : '無工作表');
     
-    // 如果工作表不存在，創建標題行
+    // 如果工作表不存在，創建新的工作表
     if (!sheet) {
       console.log('創建新的工作表...');
       sheet = await doc.addSheet({ title: 'LineBot Messages' });
       console.log('新工作表創建成功');
     }
     
-    // 檢查是否需要添加標題行
-    console.log('檢查標題行...');
-    const rows = await sheet.getRows();
-    console.log(`工作表目前有 ${rows.length} 行資料`);
+    // 檢查工作表是否有標題行
+    await sheet.loadCells('A1:C1');
+    const hasHeaders = sheet.getCellByA1('A1').value && sheet.getCellByA1('B1').value && sheet.getCellByA1('C1').value;
+    console.log('工作表是否有標題行:', hasHeaders);
     
-    if (rows.length === 0) {
+    if (!hasHeaders) {
       console.log('設定標題行...');
+      // 直接設定標題行
+      sheet.getCellByA1('A1').value = 'Time';
+      sheet.getCellByA1('B1').value = 'User ID';
+      sheet.getCellByA1('C1').value = 'Messages';
+      await sheet.saveUpdatedCells();
+      
+      // 設定為標題行
       await sheet.setHeaderRow(['Time', 'User ID', 'Messages']);
       console.log('標題行設定完成');
     }
